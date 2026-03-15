@@ -97,20 +97,26 @@ export function apply(ctx: Context, config: Config) {
         }
       }
 
-      // 为 AI 节点伪造名字和头像
-      const summaryNode = h('message', { 
-        userId: session.bot.userId, 
-        nickname: 'AI 纪要员',
-        avatar: `http://q1.qlogo.cn/g?b=qq&nk=${session.bot.userId}&s=640`
-      }, `[AI 总结]\n${summaryText}`)
+      // 使用 author 标签伪造 AI 节点
+      const summaryNode = h('message', [
+        h('author', {
+          id: session.bot.userId,
+          name: 'AI 纪要员',
+          avatar: `http://q1.qlogo.cn/g?b=qq&nk=${session.bot.userId}&s=640`
+        }),
+        `[AI 总结]\n${summaryText}`
+      ])
 
-      // 为发言人节点伪造名字和头像
+      // 使用 author 标签伪造发言人节点
       const forwardNodes = currentRecords.map(record => {
-        return h('message', { 
-          userId: record.userId, 
-          nickname: record.username,
-          avatar: `http://q1.qlogo.cn/g?b=qq&nk={record.userId}&s=640`
-        }, record.content)
+        return h('message', [
+          h('author', {
+            id: record.userId,
+            name: record.username,
+            avatar: `http://q1.qlogo.cn/g?b=qq&nk=${record.userId}&s=640`
+          }),
+          record.content
+        ])
       })
 
       return h('message', { forward: true }, summaryNode, ...forwardNodes)
