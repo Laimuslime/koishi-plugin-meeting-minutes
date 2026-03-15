@@ -109,7 +109,7 @@ export function apply(ctx: Context, config: Config) {
         return h('message', { 
           userId: record.userId, 
           nickname: record.username,
-          avatar: `http://q1.qlogo.cn/g?b=qq&nk=${record.userId}&s=640`
+          avatar: `http://q1.qlogo.cn/g?b=qq&nk={record.userId}&s=640`
         }, record.content)
       })
 
