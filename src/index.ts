@@ -13,7 +13,7 @@ export const Config: Schema<Config> = Schema.object({
   apiUrl: Schema.string().description('硅基流动 API 地址').default('https://api.siliconflow.cn/v1/chat/completions'),
   apiKey: Schema.string().role('secret').description('硅基流动 API 密钥 (必填，以 sk- 开头)'),
   model: Schema.string().description('请求的模型名称').default('deepseek-ai/DeepSeek-V3'),
-  systemPrompt: Schema.string().description('AI 总结的系统提示词').default('你是一个会议纪要助手，请根据以下两人的辩论或对话内容，总结核心论点和结论。')
+  systemPrompt: Schema.string().description('AI 总结的系统提示词').default('你是一个辩论兼群聊纪要助手。请根据两人的对话记录输出总结。\n如果是一场正常的讨论或辩论，请提取：1.核心议题；2.双方立场与交锋点；3.结论。\n\n⚠️严格的格式要求：\n1. 绝对不要使用任何 Markdown 语法（严禁使用星号 **、井号 # 等符号加粗或做标题）。\n2. 请只使用纯文本和基础的数字序号（如 1. 2. 3.）进行排版。\n3. 如果对话只是毫无逻辑的闲聊、水群或无意义词汇，请直接用一句话简短概括，绝对不要强行套用辩论格式或进行生硬分析。')
 })
 
 interface RecordItem {
@@ -97,7 +97,6 @@ export function apply(ctx: Context, config: Config) {
         }
       }
 
-      // 使用 author 标签伪造 AI 节点
       const summaryNode = h('message', [
         h('author', {
           id: session.bot.userId,
@@ -107,7 +106,6 @@ export function apply(ctx: Context, config: Config) {
         `[AI 总结]\n${summaryText}`
       ])
 
-      // 使用 author 标签伪造发言人节点
       const forwardNodes = currentRecords.map(record => {
         return h('message', [
           h('author', {
@@ -126,11 +124,13 @@ export function apply(ctx: Context, config: Config) {
     const cid = session.cid
     
     if (targetUsers[cid] && targetUsers[cid].includes(session.userId) && session.content) {
-      if (!session.content.includes('开始会议') && !session.content.includes('结束会议')) {
+      const cleanContent = session.content.replace(/<[^>]+>/g, '').trim()
+      
+      if (cleanContent && !cleanContent.includes('开始会议') && !cleanContent.includes('结束会议')) {
         records[cid].push({
           userId: session.userId,
           username: session.username || session.userId,
-          content: session.content
+          content: cleanContent
         })
       }
     }
