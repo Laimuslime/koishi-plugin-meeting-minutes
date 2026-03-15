@@ -9,7 +9,6 @@ export interface Config {
   systemPrompt: string
 }
 
-// 这里将默认配置直接替换为硅基流动的参数
 export const Config: Schema<Config> = Schema.object({
   apiUrl: Schema.string().description('硅基流动 API 地址').default('https://api.siliconflow.cn/v1/chat/completions'),
   apiKey: Schema.string().role('secret').description('硅基流动 API 密钥 (必填，以 sk- 开头)'),
@@ -98,15 +97,19 @@ export function apply(ctx: Context, config: Config) {
         }
       }
 
+      // 为 AI 节点伪造名字和头像
       const summaryNode = h('message', { 
         userId: session.bot.userId, 
-        nickname: 'AI 纪要员' 
+        nickname: 'AI 纪要员',
+        avatar: `http://q1.qlogo.cn/g?b=qq&nk=${session.bot.userId}&s=640`
       }, `[AI 总结]\n${summaryText}`)
 
+      // 为发言人节点伪造名字和头像
       const forwardNodes = currentRecords.map(record => {
         return h('message', { 
           userId: record.userId, 
-          nickname: record.username 
+          nickname: record.username,
+          avatar: `http://q1.qlogo.cn/g?b=qq&nk=${record.userId}&s=640`
         }, record.content)
       })
 
